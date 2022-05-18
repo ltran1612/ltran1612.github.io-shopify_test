@@ -10,8 +10,11 @@
 let input_section = document.getElementById("input-section");
 let prompt_box = document.getElementById("input-box");
 let creativity_slider = document.getElementById("creativity-slider");
+let engines_list = document.getElementById("engines_list");
 let send_button = document.getElementById("submit-button");
 send_button.onclick = submitPrompt;
+setUpEngineList()
+
 
 // output-section
 let response_list = document.getElementById("result-list");
@@ -25,10 +28,13 @@ response_template.style.display = "none";
 class ResponseManager {
     constructor(ui_obj) {
         this.obj = ui_obj
-        let my_es = this.obj.getElementsByTagName("div");
-        this.prompt = my_es.namedItem("prompt");
-        this.response = my_es.namedItem("response");
-        this.close_button = this.obj.getElementsByTagName("div").namedItem("close_button");
+        let my_divs = this.obj.getElementsByTagName("div");
+        let my_pres = this.obj.getElementsByTagName("pre");
+
+        this.prompt = my_pres.namedItem("prompt");
+        this.response = my_pres.namedItem("response");
+        this.model_name = my_divs.namedItem("model_name");
+        this.close_button = my_divs.namedItem("close_button");
         
         // set onclick action
         this.close_button.onclick = this.createRemoveSelfLambda();
@@ -42,6 +48,10 @@ class ResponseManager {
     setResponse(text) {
         this.response.innerHTML = text;
     } // end setResponse
+
+    setModelName(model_name, result_type) {
+        this.model_name.innerHTML = `Model: ${model_name}<br>A.I Operation Type: ${result_type}`;
+    } // end setModelName
 
     createRemoveSelfLambda() {
         return () => {
@@ -71,7 +81,9 @@ class ResponseListManger {
         let my_data = {
             ref: null,
             prompt: _prompt,
-            response: response_data['choices'][0]['text']
+            response: response_data['choices'][0]['text'],
+            model_name: response_data['model'],
+            result_type: response_data['object']
         };
 
         // push to block
@@ -86,6 +98,7 @@ class ResponseListManger {
 
         response_manager.setPrompt(my_data.prompt);
         response_manager.setResponse(my_data.response);
+        response_manager.setModelName(my_data.model_name, my_data.result_type);
     } // end createResponseBlock
 
     clearResponses() {
@@ -127,15 +140,57 @@ function submitPrompt() {
     };
        
     // send the data
-    let promise = fetch("https://api.openai.com/v1/engines/text-curie-001/completions", request_param)
-    promise.then(response => response.text()).then(result => {
+    let selected_engine = engines_list.value;
+    let promise = fetch(`https://api.openai.com/v1/engines/${selected_engine}/completions`, request_param)
+    promise.then(response => response.text(), response => {
+        console.error("Cannot access OpenAI");
+        console.error("Reason: response");
+    }).then(result => {
         let data = JSON.parse(result);
-        
+        //console.log(data)
         // push the result
         response_list_manager.createResponseBlock(text, data);
     });
-
 } // end submitPrompt
+    
+function setUpEngineList() {
+    let option_template = engines_list.getElementsByTagName("option")[0];
+    option_template.style.display = "none";
+    option_template.selected = ""
+    
+    let OPENAI_SECRET = ""
+
+    let request_param = {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_SECRET}`,
+        } // end headers
+    };
+       
+    // get engines list and set up the HTML select dropwdown
+    let promise = fetch("https://api.openai.com/v1/engines", request_param);
+    promise.then(response => response.text(), response => {
+        console.error("Cannot access OpenAI");
+        console.error("Reason: response")
+    }).then(result => {
+        let data = JSON.parse(result)['data'];
+        data.forEach((value) => {
+            if (value['owner'] == "openai") {
+                let new_option = option_template.cloneNode(true);
+                let id = value['id'];
+                new_option.value = id;
+                new_option.innerHTML = id;
+                new_option.style.display = "block";
+                engines_list.appendChild(new_option);
+
+                if (id == "text-curie-001") {
+                    new_option.selected = "selected";
+                } // end if
+            } // end if
+        }) // end foreach
+    }); // end then
+} // end getEngineList
 
 /*
     Clear all responses in the list. 

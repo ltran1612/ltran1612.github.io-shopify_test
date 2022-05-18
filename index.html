@@ -55,6 +55,15 @@
                     <label class="value-label">Most Creative</label>
                 </div>
 
+                <!--Engine List-->
+                <div class="mb-3">
+                    <label class="value-label">Engines List</label>
+                    <select class ="form-select" id="engines_list">
+                        <option value="">Finding Available Engines...</option>
+                    </select>
+                    
+                </div>
+
                 <!--Prompt Input-->
                 <h3>Prompt</h3>
                 <div class="form-floating mb-3">
@@ -72,13 +81,14 @@
                     <button class="btn btn-secondary btn-xl" id="clear-responses-button" onclick="clearAllResponses()" type="submit">Clear Responses</button>
                     <div id="result-list" class="column">
                         <div id="result-card-template" class="row">
+                            <div class=" card bg-secondary text-white" name="model_name">Engine Name + Result Type Here</div>
                             <div class="card">
                                 <div name="close_button" class="close"></div>
                                 <h5>Prompt: </h5> 
-                                <div name="prompt">Placeholder</div>
+                                <pre name="prompt">Placeholder</pre>
 
                                 <h5>Response: </h5> 
-                                <div name="response">Placeholder</div>
+                                <pre name="response">Placeholder</pre>
                             </div>
                         </div>
                     </div>
