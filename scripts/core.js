@@ -176,17 +176,26 @@ function setUpEngineList() {
     }).then(result => {
         let data = JSON.parse(result)['data'];
         data.forEach((value) => {
-            if (value['owner'] == "openai") {
-                let new_option = option_template.cloneNode(true);
+            if (value['owner'] == "openai" && value['ready']==true) {
                 let id = value['id'];
-                new_option.value = id;
-                new_option.innerHTML = id;
-                new_option.style.display = "block";
-                engines_list.appendChild(new_option);
+                switch(id) {
+                    case "text-davinci-002":
+                    case "text-curie-001":
+                    case "text-babbage-001":
+                    case "text-ada-001":
+                        let new_option = option_template.cloneNode(true);
+                        new_option.value = id;
+                        new_option.innerHTML = id;
+                        new_option.style.display = "block";
+                        engines_list.appendChild(new_option);
 
-                if (id == "text-curie-001") {
-                    new_option.selected = "selected";
-                } // end if
+                        if (id == "text-curie-001") {
+                            new_option.selected = "selected";
+                        } // end if
+                        break;
+                    default:
+                        //console.log("may not be completions engine");
+                } // end switch
             } // end if
         }) // end foreach
     }); // end then
